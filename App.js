@@ -8,9 +8,33 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { TouchableHighlight } from 'react-native';
 import MyDetailsForm from './MyDetailsForm';
+import { useCallback } from 'react';
+import { useEffect } from 'react';
+import * as SMS from 'expo-sms';
 
 function HomeScreen({ navigation }) {
   const [countdown, setCountdown] = useState(null);
+
+  const [smsAvailable, setSmsAvailable] = useState(false);
+  // Pour la prod
+  // const [phoneNumber, setPhoneNumber] = React.useState('');
+  // const [message, setMessage] = React.useState('');
+
+  const onComposeSms = useCallback(async () => {
+    if (smsAvailable) {
+      console.log('going for it!');
+      // Pour la prod:
+      // await SMS.sendSMSAsync(phoneNumber.toString(), message);
+      await SMS.sendSMSAsync(
+        '0603013922',
+        'Je me suis fait chopé!',
+      );
+    }
+  }, [smsAvailable]);
+
+  useEffect(() => {
+    SMS.isAvailableAsync().then(setSmsAvailable);
+  }, []);
 
 
   const _handlePress = () => {
@@ -20,7 +44,8 @@ function HomeScreen({ navigation }) {
       setCountdown(prevCountdown => {
         if (prevCountdown === 1) {
           clearInterval(timer); // Stop the countdown when it reaches 1
-          alert("dead man switch triggered !")
+          // alert("dead man switch triggered !")
+          onComposeSms();
         }
         return prevCountdown - 1;
       });
@@ -46,6 +71,10 @@ function HomeScreen({ navigation }) {
       </View>
     </TouchableHighlight>
     {countdown !== null && countdown > 0 && <Text>Countdown: {countdown}</Text>}
+    {smsAvailable
+          ? <Text>SMS will be sent to your emergency contacts</Text>
+          : <Text>Unfortunately, SMS is not available on this device</Text>
+        }
     <StatusBar style="auto" />
     <Button
         title="My rights"
